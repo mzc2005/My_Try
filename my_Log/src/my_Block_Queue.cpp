@@ -1,5 +1,5 @@
 #include "../include/my_Block_Queue.h"
-
+#include <iostream>
 block_Queue::block_Queue(int max_Size)
 {
     if (max_Size <= 0)
@@ -9,6 +9,15 @@ block_Queue::block_Queue(int max_Size)
     my_Front = 0;
     my_Last = 0;
     my_Queue.reserve(max_Size);
+}
+
+bool block_Queue::Full()
+{
+    std::unique_lock<std::mutex> lck(my_Mutex);
+    if (my_Count == my_Max_Size)
+        return true;
+    else
+        return false;
 }
 
 std::string block_Queue::Front()
@@ -39,7 +48,7 @@ std::string block_Queue::Back()
 
 bool block_Queue::push(std::string s)
 {
-    my_Mutex.lock();
+    std::unique_lock<std::mutex> lock(my_Mutex);
     if (my_Count == my_Max_Size)
     {
         my_Mutex.unlock();
@@ -49,8 +58,8 @@ bool block_Queue::push(std::string s)
     my_Last = (my_Last + 1) % my_Max_Size;
     my_Queue[my_Last] = s;
     my_Count++;
-    my_Mutex.unlock();
-    my_Condition.notify_one();
+    lock.unlock();
+    my_Condition.notify_all();
     return true;
 }
 
@@ -61,7 +70,7 @@ std::string block_Queue::pop()
     {
         my_Condition.wait(lock);
     }
-    std::string s = Front();
+    std::string s = my_Queue[my_Front];
     my_Front = (my_Front + 1) % my_Max_Size;
     my_Count--;
     return s;

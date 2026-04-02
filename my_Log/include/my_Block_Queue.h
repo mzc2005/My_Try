@@ -13,6 +13,7 @@ public:
     block_Queue(int max_Size = 1000);
     ~block_Queue();
  
+    bool Full(); //查看阻塞队列是否已满
     std::string Front();  //返回队列的首元素，失败返回NULL
     std::string Back();   //返回队列队尾元素，失败返回NULL
     bool push(std::string s); 
